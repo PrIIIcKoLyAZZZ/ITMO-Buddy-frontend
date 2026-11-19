@@ -1,4 +1,5 @@
 import { useSyncExternalStore } from 'react'
+import { toast } from 'sonner'
 import { ApiError, request, type RequestOptions } from '@/api/http'
 import type { AuthResponse, LoginRequest, RegisterRequest } from '@/api/contracts'
 import { queryClient } from '@/lib/query'
@@ -11,6 +12,7 @@ type SessionState =
 
 let state: SessionState = { status: 'loading' }
 let sessionVersion = 0
+let sessionRequests = new AbortController()
 let refreshFlight: Promise<AuthResponse> | undefined
 let authMutation = false
 let deletingAccount = false
@@ -32,6 +34,9 @@ export function useSession() {
 
 function clearSession(next: SessionState) {
   sessionVersion += 1
+  sessionRequests.abort()
+  sessionRequests = new AbortController()
+  toast.dismiss()
   queryClient.clear()
   publish(next)
 }
@@ -39,9 +44,15 @@ function clearSession(next: SessionState) {
 function refreshSession() {
   if (refreshFlight) return refreshFlight
   const version = sessionVersion
+  const userId = authenticatedUserId()
   refreshFlight = request<AuthResponse>('/api/auth/refresh', { method: 'POST' })
     .then(session => {
-      if (version === sessionVersion) publish({ status: 'authenticated', session })
+      if (version === sessionVersion) {
+        if (userId && userId !== session.userId) {
+          throw new ApiError(401, 'Аккаунт в браузере изменился. Войди снова.')
+        }
+        publish({ status: 'authenticated', session })
+      }
       return session
     })
     .catch((error: Error) => {
@@ -98,15 +109,25 @@ export async function api<T>(path: string, options: RequestOptions = {}): Promis
   if (state.status !== 'authenticated') throw new ApiError(401, 'Войдите в аккаунт.')
   const initial = state.session
   const version = sessionVersion
+  const signal = options.signal
+    ? AbortSignal.any([options.signal, sessionRequests.signal])
+    : sessionRequests.signal
+
+  async function execute(token: string) {
+    signal.throwIfAborted()
+    const result = await request<T>(path, { ...options, signal }, token)
+    signal.throwIfAborted()
+    return result
+  }
+
   try {
-    return await request<T>(path, options, initial.accessToken)
+    return await execute(initial.accessToken)
   } catch (error) {
-    if (!(error instanceof ApiError) || error.status !== 401 || options.signal?.aborted ||
+    if (!(error instanceof ApiError) || error.status !== 401 || signal.aborted ||
       version !== sessionVersion) throw error
     if (state.session === initial) await refreshSession()
     if (version !== sessionVersion || state.status !== 'authenticated') throw error
-    options.signal?.throwIfAborted()
-    return request<T>(path, options, state.session.accessToken)
+    return execute(state.session.accessToken)
   }
 }
 

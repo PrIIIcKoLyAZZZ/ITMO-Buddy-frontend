@@ -1,7 +1,7 @@
 import * as Dialog from '@radix-ui/react-alert-dialog'
 import * as Avatar from '@radix-ui/react-avatar'
 import { CircleAlert, UserRound } from 'lucide-react'
-import type { ReactNode } from 'react'
+import { useRef, type ReactNode } from 'react'
 import { cn } from '@/lib/utils'
 import { Button } from './ui/button'
 
@@ -34,8 +34,8 @@ export function EmptyState({ title, description, icon, action }: {
 export function ErrorState({ title = 'Что-то пошло не так', error, retry }: {
   title?: string; error: Error; retry?: () => void
 }) {
-  return <EmptyState icon={<CircleAlert />} title={title} description={error.message}
-    action={retry && <Button variant="outline" onClick={retry}>Повторить</Button>} />
+  return <div role="alert"><EmptyState icon={<CircleAlert />} title={title} description={error.message}
+    action={retry && <Button variant="outline" onClick={retry}>Повторить</Button>} /></div>
 }
 
 export function LoadingSkeleton({ label = 'Загрузка' }: { label?: string }) {
@@ -53,12 +53,20 @@ export function ConfirmDialog({ trigger, title, description, confirmLabel, onCon
   trigger?: ReactNode; title: string; description: string; confirmLabel: string;
   onConfirm: () => void; destructive?: boolean; open?: boolean; onOpenChange?: (open: boolean) => void
 }) {
+  const returnFocus = useRef<HTMLElement>(null)
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
       {trigger && <Dialog.Trigger asChild>{trigger}</Dialog.Trigger>}
       <Dialog.Portal>
         <Dialog.Overlay className="fixed inset-0 z-40 bg-[#111b42]/45" />
-        <Dialog.Content className="fixed top-1/2 left-1/2 z-50 w-[calc(100%-2rem)] max-w-md -translate-1/2 space-y-4 rounded-2xl bg-white p-6 shadow-xl">
+        <Dialog.Content onOpenAutoFocus={() => {
+          returnFocus.current = document.activeElement instanceof HTMLElement ? document.activeElement : null
+        }} onCloseAutoFocus={event => {
+          if (!trigger && returnFocus.current?.isConnected) {
+            event.preventDefault()
+            returnFocus.current.focus()
+          }
+        }} className="max-h-[calc(100dvh-2rem)] overflow-auto fixed top-1/2 left-1/2 z-50 w-[calc(100%-2rem)] max-w-md -translate-1/2 space-y-4 rounded-2xl bg-white p-6 shadow-xl">
           <Dialog.Title className="text-xl font-bold">{title}</Dialog.Title>
           <Dialog.Description className="text-secondary-ink">{description}</Dialog.Description>
           <div className="flex flex-wrap justify-end gap-2">

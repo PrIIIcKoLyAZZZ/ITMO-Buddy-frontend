@@ -46,7 +46,8 @@ function ConversationList({ activeId, onConversation }: {
 
   return <aside aria-label="Список диалогов" className={`min-w-0 overflow-y-auto lg:block ${activeId ? 'hidden' : ''}`}>
     <div className="p-4">
-      <h1 className="mb-4 text-2xl font-extrabold">Сообщения</h1>
+      {activeId ? <h2 className="mb-4 text-2xl font-extrabold">Сообщения</h2>
+        : <h1 className="mb-4 text-2xl font-extrabold">Сообщения</h1>}
       {list.isPending ? <LoadingSkeleton label="Загружаем диалоги" />
         : list.isError ? <ErrorState error={list.error} retry={() => void list.refetch()} />
         : <>
@@ -104,17 +105,30 @@ function MessageThread({ id, userId, known }: { id: string; userId: string; know
     },
   })
 
-  const unique = new Map<string, MessageResponse>()
-  for (const page of history.data?.pages ?? []) {
-    for (const message of page.items) if (!unique.has(message.id)) unique.set(message.id, message)
-  }
-  // REST and realtime can deliver the same timestamps in a different order.
-  const messages = [...unique.values()].sort((left, right) => {
-    const leftTime = left.sentAtUtc.replace(/Z$/, '+00:00')
-    const rightTime = right.sentAtUtc.replace(/Z$/, '+00:00')
-    if (leftTime !== rightTime) return leftTime < rightTime ? -1 : 1
-    return left.id.localeCompare(right.id)
+  const [displayedHistory, setDisplayedHistory] = useState({
+    source: undefined as typeof history.data,
+    messages: [] as MessageResponse[],
   })
+  const messages = displayedHistory.messages
+  if (displayedHistory.source !== history.data) {
+    const messages = new Map<string, MessageResponse>()
+    for (const page of history.data?.pages ?? []) {
+      for (const message of page.items) if (!messages.has(message.id)) messages.set(message.id, message)
+    }
+    // A refetch shifts the server's offset window as new messages arrive. Keep the
+    // loaded tail only when both windows overlap, so a reconnect cannot hide a gap.
+    const previous = displayedHistory.messages
+    if (previous.some(message => messages.has(message.id))) {
+      for (const message of previous) if (!messages.has(message.id)) messages.set(message.id, message)
+    }
+    const sorted = [...messages.values()].sort((left, right) => {
+      const leftTime = left.sentAtUtc.replace(/Z$/, '+00:00')
+      const rightTime = right.sentAtUtc.replace(/Z$/, '+00:00')
+      if (leftTime !== rightTime) return leftTime < rightTime ? -1 : 1
+      return left.id.localeCompare(right.id)
+    })
+    setDisplayedHistory({ source: history.data, messages: sorted })
+  }
   const newest = messages.at(-1)?.id
 
   function readPosition() {
@@ -141,7 +155,7 @@ function MessageThread({ id, userId, known }: { id: string; userId: string; know
       const row = element.querySelector(`[data-message-id="${saved.anchorId}"]`)
       if (row) element.scrollTop += row.getBoundingClientRect().top - element.getBoundingClientRect().top - saved.offset
     }
-  }, [history.data])
+  }, [messages])
 
   useEffect(() => {
     if (newest && lastMessage.current && newest !== lastMessage.current && !position.current.atEnd) setNewMessages(true)
@@ -159,7 +173,16 @@ function MessageThread({ id, userId, known }: { id: string; userId: string; know
     readPosition()
     if (messages.length) position.current.atEnd = false
     loadingOlder.current = true
-    try { await history.fetchNextPage({ cancelRefetch: false }) } finally { loadingOlder.current = false }
+    try {
+      const result = await history.fetchNextPage({ cancelRefetch: false })
+      const pages = result.data?.pages
+      // A message can reach the server between offset requests even when no event reaches this tab.
+      if (result.isSuccess && pages && pages[0]?.totalCount !== pages.at(-1)?.totalCount) {
+        await history.refetch()
+      }
+    } finally {
+      loadingOlder.current = false
+    }
   }
 
   function sendMessage() {
@@ -177,8 +200,9 @@ function MessageThread({ id, userId, known }: { id: string; userId: string; know
       </Button>
       <UserAvatar name={partner ? name : undefined} photoUrl={partner?.photoUrl} />
       <div className="min-w-0">
-        {partner ? <Link to={`/users/${partner.userId}`} className="font-bold wrap-anywhere hover:underline">{name}</Link>
-          : <h2 className="font-bold">{name}</h2>}
+        <h1 className="font-bold wrap-anywhere">
+          {partner ? <Link to={`/users/${partner.userId}`} className="hover:underline">{name}</Link> : name}
+        </h1>
         {!connected && <p className="text-xs text-secondary-ink">Обновляем через сервер</p>}
       </div>
     </header>
