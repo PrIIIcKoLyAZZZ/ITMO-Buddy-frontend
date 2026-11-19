@@ -14,6 +14,13 @@ const ProfileEditPage = lazy(() => import('@/profile/profile-edit').then(module 
 const SearchPage = lazy(() => import('@/discovery/search-page'))
 const RecommendationsPage = lazy(() => import('@/discovery/recommendations-page'))
 
+const ListingsPage = lazy(() => import('@/listings/feed-page').then(module => ({ default: module.ListingsPage })))
+const MyListingsPage = lazy(() => import('@/listings/feed-page').then(module => ({ default: module.MyListingsPage })))
+const NewListingPage = lazy(() => import('@/listings/form-page').then(module => ({ default: module.NewListingPage })))
+const EditListingPage = lazy(() => import('@/listings/form-page').then(module => ({ default: module.EditListingPage })))
+const ListingDetailPage = lazy(() => import('@/listings/detail-page'))
+const MyResponsesPage = lazy(() => import('@/listings/responses').then(module => ({ default: module.MyResponsesPage })))
+
 function SessionGate() {
   const session = useSession()
   if (session.status === 'loading') return <div className="session-screen"><LoadingSkeleton label="Проверяем сессию" /></div>
@@ -43,9 +50,7 @@ function GuestRoutes() {
 }
 
 const futureRoutes = [
-  ['dashboard', 'Главная'], ['listings', 'Объявления'], ['listings/new', 'Новое объявление'],
-  ['listings/my', 'Мои объявления'], ['listings/:id', 'Объявление'], ['listings/:id/edit', 'Редактирование объявления'],
-  ['responses/my', 'Мои отклики'], ['messages', 'Сообщения'], ['messages/:conversationId', 'Переписка'],
+  ['dashboard', 'Главная'], ['messages', 'Сообщения'], ['messages/:conversationId', 'Переписка'],
   ['notifications', 'Уведомления'], ['settings', 'Настройки'],
 ] as const
 
@@ -69,6 +74,12 @@ export const router = createBrowserRouter(createRoutesFromElements(
       <Route path="users/:userId" element={<PublicProfilePage />} />
       <Route path="search" element={<SearchPage />} />
       <Route path="recommendations" element={<RecommendationsPage />} />
+      <Route path="listings" element={<ListingsPage />} />
+      <Route path="listings/new" element={<NewListingPage />} />
+      <Route path="listings/my" element={<MyListingsPage />} />
+      <Route path="listings/:id" element={<ListingDetailPage />} />
+      <Route path="listings/:id/edit" element={<EditListingPage />} />
+      <Route path="responses/my" element={<MyResponsesPage />} />
       {futureRoutes.map(([path, title]) =>
         <Route key={path} path={path} element={<FuturePage title={title} />} />)}
       <Route path="*" element={<EmptyState title="Страница не найдена" description="Проверь адрес или вернись на главную."
