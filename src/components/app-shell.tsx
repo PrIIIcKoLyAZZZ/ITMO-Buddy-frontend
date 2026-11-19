@@ -37,7 +37,7 @@ function LogoutButton() {
 export function Sidebar() {
   return (
     <aside className="sidebar">
-      <Link to="/dashboard"><img src="/logo.svg" alt="ITMO Buddy — главная" width="183" height="48" /></Link>
+      <Link to="/dashboard"><img src="/logo.svg" alt="ITMO Buddy — главная" width="192" height="48" /></Link>
       <nav aria-label="Основная навигация"><NavigationLinks /></nav>
       <div className="sidebar-footer"><LogoutButton /></div>
     </aside>

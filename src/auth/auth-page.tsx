@@ -63,7 +63,7 @@ export default function AuthPage({ mode }: { mode: 'login' | 'register' }) {
   return (
     <div className="auth-layout">
       <aside className="auth-aside">
-        <img src="/logo.svg" alt="ITMO Buddy" width="183" height="48" />
+        <img src="/logo.svg" alt="ITMO Buddy" width="192" height="48" />
         <div className="aside-content">
           <Sparkles className="aside-icon" aria-hidden="true" />
           <p>Найди своих<br />в ИТМО<span>.</span></p>
@@ -72,7 +72,7 @@ export default function AuthPage({ mode }: { mode: 'login' | 'register' }) {
         <div className="orbit" aria-hidden="true"><i /><i /><i /><b /><b /></div>
       </aside>
       <main className="auth-main">
-        <img className="mobile-logo" src="/logo.svg" alt="ITMO Buddy" width="183" height="48" />
+        <img className="mobile-logo" src="/logo.svg" alt="ITMO Buddy" width="192" height="48" />
         <section className="auth-card" aria-labelledby="auth-title">
           <h1 id="auth-title">{isRegister ? 'Создать аккаунт' : 'Войти в ITMO Buddy'}</h1>
           <p className="auth-intro">{isRegister ? 'Укажи email и придумай пароль.' : 'Введи email и пароль своего аккаунта.'}</p>
