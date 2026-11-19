@@ -33,7 +33,10 @@ function ProfileDetails({ profile, own }: { profile: ProfileResponse; own?: bool
             </p>
           </div>
         </div>
-        {own && <Button asChild><Link to="/profile/edit"><Pencil size={16} /> Редактировать</Link></Button>}
+        {own && <div className="flex flex-wrap gap-2">
+          <Button asChild><Link to="/profile/edit"><Pencil size={16} /> Редактировать</Link></Button>
+          <Button asChild variant="outline"><Link to="/settings">Настройки</Link></Button>
+        </div>}
       </div>
       {!own && <SocialActions userId={profile.userId} />}
       {own && <div className="flex flex-wrap gap-2">
@@ -69,7 +72,10 @@ export function MyProfilePage() {
       <h1 className="page-title">Мой профиль</h1>
       <EmptyState icon={<UserRound />} title="Анкета пока пуста"
         description={profile.data.isVisible ? 'Профиль доступен другим студентам. Добавь сведения о себе.' : 'Профиль скрыт. Заполни анкету и настрой её видимость.'}
-        action={<Button asChild><Link to="/profile/edit">Заполнить профиль</Link></Button>} />
+        action={<div className="flex flex-wrap justify-center gap-2">
+          <Button asChild><Link to="/profile/edit">Заполнить профиль</Link></Button>
+          <Button asChild variant="outline"><Link to="/settings">Настройки</Link></Button>
+        </div>} />
     </>
   }
   return <ProfileDetails profile={profile.data} own />

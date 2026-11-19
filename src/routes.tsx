@@ -1,4 +1,4 @@
-import { ArrowLeft, Construction } from 'lucide-react'
+import { ArrowLeft } from 'lucide-react'
 import { lazy, Suspense } from 'react'
 import { Link, Navigate, Outlet, Route, createBrowserRouter, createRoutesFromElements, useLocation } from 'react-router-dom'
 import { AppShell } from '@/components/app-shell'
@@ -20,6 +20,11 @@ const NewListingPage = lazy(() => import('@/listings/form-page').then(module => 
 const EditListingPage = lazy(() => import('@/listings/form-page').then(module => ({ default: module.EditListingPage })))
 const ListingDetailPage = lazy(() => import('@/listings/detail-page'))
 const MyResponsesPage = lazy(() => import('@/listings/responses').then(module => ({ default: module.MyResponsesPage })))
+
+const MessagesPage = lazy(() => import('@/chat/page'))
+const NotificationsPage = lazy(() => import('@/notifications/page'))
+const DashboardPage = lazy(() => import('@/dashboard/page'))
+const SettingsPage = lazy(() => import('@/settings/page'))
 
 function SessionGate() {
   const session = useSession()
@@ -49,18 +54,6 @@ function GuestRoutes() {
   return session.status === 'authenticated' ? <Navigate to={path} replace /> : <Outlet />
 }
 
-const futureRoutes = [
-  ['dashboard', 'Главная'], ['messages', 'Сообщения'], ['messages/:conversationId', 'Переписка'],
-  ['notifications', 'Уведомления'], ['settings', 'Настройки'],
-] as const
-
-function FuturePage({ title }: { title: string }) {
-  return <>
-    <h1 className="page-title">{title}</h1>
-    <EmptyState title="Раздел в разработке" description="Этот раздел появится в одном из следующих этапов ITMO Buddy." icon={<Construction />} />
-  </>
-}
-
 export const router = createBrowserRouter(createRoutesFromElements(
   <Route element={<SessionGate />}>
     <Route element={<GuestRoutes />}>
@@ -80,8 +73,11 @@ export const router = createBrowserRouter(createRoutesFromElements(
       <Route path="listings/:id" element={<ListingDetailPage />} />
       <Route path="listings/:id/edit" element={<EditListingPage />} />
       <Route path="responses/my" element={<MyResponsesPage />} />
-      {futureRoutes.map(([path, title]) =>
-        <Route key={path} path={path} element={<FuturePage title={title} />} />)}
+      <Route path="messages" element={<MessagesPage />} />
+      <Route path="messages/:conversationId" element={<MessagesPage />} />
+      <Route path="notifications" element={<NotificationsPage />} />
+      <Route path="dashboard" element={<DashboardPage />} />
+      <Route path="settings" element={<SettingsPage />} />
       <Route path="*" element={<EmptyState title="Страница не найдена" description="Проверь адрес или вернись на главную."
         icon={<ArrowLeft />} action={<Button asChild><Link to="/dashboard">На главную</Link></Button>} />} />
     </Route>

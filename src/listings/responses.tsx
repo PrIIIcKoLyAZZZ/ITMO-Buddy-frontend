@@ -7,14 +7,15 @@ import { ApiError } from '@/api/http'
 import { api } from '@/auth/session'
 import { EmptyState, ErrorState, LoadingSkeleton } from '@/components/states'
 import { Button } from '@/components/ui/button'
+import { conversationParticipant } from '@/chat/queries'
 import { Pagination, StudentCard } from '@/discovery/ui'
 import { responseMessageLimit, isNonEmptyGuid, type ListingResponseDto, type ResponseDecision } from './contracts'
-import { listingActionKey, listingDetail, listingError, listingPath, listingResponses, myResponses, refreshListings, responseConversation } from './queries'
+import { listingActionKey, listingDetail, listingError, listingPath, listingResponses, myResponses, refreshListings } from './queries'
 import { DateStamp, ListingField, ListingsNavigation, StatusBadge, textareaClass } from './ui'
 
 function ResponseConversation({ otherUserId }: { otherUserId: string }) {
   const [requested, setRequested] = useState(false)
-  const result = useQuery(responseConversation(otherUserId, requested))
+  const result = useQuery(conversationParticipant(otherUserId, requested))
   if (requested && !result.isFetching && result.isSuccess && isNonEmptyGuid(result.data ?? undefined)) {
     return <Button asChild variant="outline"><Link to={`/messages/${result.data}`}>К переписке</Link></Button>
   }

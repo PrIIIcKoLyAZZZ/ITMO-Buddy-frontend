@@ -87,28 +87,3 @@ const errorMessages: Record<string, string> = {
 export function listingError(error: Error) {
   return error instanceof ApiError ? errorMessages[error.payload?.code ?? ''] ?? error.payload?.message ?? error.message : error.message
 }
-
-interface ConversationListItem {
-  conversationId: string
-  otherParticipant: { userId: string }
-}
-
-export function responseConversation(otherUserId: string, enabled: boolean) {
-  return queryOptions({
-    queryKey: ['conversations', 'participant', otherUserId],
-    queryFn: async ({ signal }) => {
-      let page = 1
-      for (;;) {
-        const result = await api<PagedResult<ConversationListItem>>('/api/conversations', {
-          query: { Page: page, PageSize: pageSize }, signal,
-        })
-        const conversation = result.items.find(item => item.otherParticipant.userId === otherUserId)
-        if (conversation) return conversation.conversationId
-        if (!(result.hasNextPage ?? page * pageSize < result.totalCount)) return null
-        page++
-      }
-    },
-    enabled,
-    staleTime: 0,
-  })
-}

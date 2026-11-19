@@ -5,6 +5,8 @@ if (origin.protocol !== 'https:' || origin.href !== origin.origin + '/') {
   throw new Error('VITE_API_ORIGIN должен содержать HTTPS origin.')
 }
 
+export const apiOrigin = origin.origin
+
 type QueryValue = string | number | boolean
 type Query = Record<string, QueryValue | readonly QueryValue[] | null | undefined>
 

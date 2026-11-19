@@ -76,3 +76,8 @@
   .social-chip { @apply inline-flex max-w-full items-center gap-1.5 rounded-full bg-muted px-3 py-1 text-sm font-medium text-foreground wrap-anywhere; }
   .social-field { @apply w-full rounded-xl border border-border bg-white text-base text-foreground focus-visible:border-primary focus-visible:outline-2 focus-visible:outline-primary/25 disabled:bg-muted; }
 }
+
+@layer components {
+  .chat-layout { @apply lg:h-[max(36rem,calc(100dvh-8.5rem))]; }
+  .chat-detail { @apply h-[var(--visible-chat-height,100dvh)] lg:h-[max(36rem,calc(100dvh-8.5rem))]; }
+}

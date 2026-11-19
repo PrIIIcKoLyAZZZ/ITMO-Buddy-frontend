@@ -85,14 +85,48 @@ export interface UploadPhotoResponse {
   photoUrl: string
 }
 
+export type ConversationParticipantResponse = Pick<ProfileCardResponse, 'userId' | 'firstName' | 'lastName' | 'photoUrl'>
+
+export interface MessageResponse {
+  id: string
+  conversationId: string
+  senderId: string
+  text: string
+  sentAtUtc: string
+  readAtUtc: string | null
+}
+
+export interface ConversationResponse {
+  conversationId: string
+  otherParticipant: ConversationParticipantResponse
+  lastMessage: MessageResponse | null
+  lastMessageAtUtc: string | null
+  unreadCount: number
+}
+
+export interface MatchResponse {
+  matchId: string
+  otherUser: ConversationParticipantResponse
+  createdAtUtc: string
+  conversationId: string | null
+}
+
 export interface LikeResponse {
   targetUserId: string
   isLiked: boolean
   isMatch: boolean
-  match?: {
-    matchId: string
-    otherUser: Pick<ProfileCardResponse, 'userId' | 'firstName' | 'lastName' | 'photoUrl'>
-    createdAtUtc: string
-    conversationId: string | null
-  } | null
+  match?: MatchResponse | null
+}
+
+export interface NotificationResponse {
+  id: string
+  type: string
+  relatedEntityId: string
+  createdAtUtc: string
+  isRead: boolean
+}
+
+export interface NotificationsPageResponse {
+  notifications: PagedResult<NotificationResponse>
+  unreadCount: number
 }

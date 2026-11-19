@@ -13,6 +13,7 @@ let state: SessionState = { status: 'loading' }
 let sessionVersion = 0
 let refreshFlight: Promise<AuthResponse> | undefined
 let authMutation = false
+let deletingAccount = false
 const listeners = new Set<() => void>()
 
 function publish(next: SessionState) {
@@ -20,13 +21,13 @@ function publish(next: SessionState) {
   listeners.forEach(listener => listener())
 }
 
-function subscribe(listener: () => void) {
+export function subscribeSession(listener: () => void) {
   listeners.add(listener)
   return () => { listeners.delete(listener) }
 }
 
 export function useSession() {
-  return useSyncExternalStore(subscribe, () => state)
+  return useSyncExternalStore(subscribeSession, () => state)
 }
 
 function clearSession(next: SessionState) {
@@ -78,7 +79,7 @@ export async function authenticate(
 }
 
 export async function logout() {
-  if (state.status !== 'authenticated' && state.status !== 'logoutFailed') return
+  if (deletingAccount || (state.status !== 'authenticated' && state.status !== 'logoutFailed')) return
   clearSession({ status: 'signingOut' })
   try {
     // Wait for cookie rotation before asking the server to revoke the session.
@@ -106,5 +107,29 @@ export async function api<T>(path: string, options: RequestOptions = {}): Promis
     if (version !== sessionVersion || state.status !== 'authenticated') throw error
     options.signal?.throwIfAborted()
     return request<T>(path, options, state.session.accessToken)
+  }
+}
+
+export function authenticatedUserId() {
+  return state.status === 'authenticated' ? state.session.userId : undefined
+}
+
+export async function realtimeAccessToken(userId: string) {
+  if (state.status !== 'authenticated' || state.session.userId !== userId) throw new Error('Сессия завершена.')
+  const version = sessionVersion
+  if (refreshFlight || Date.parse(state.session.expiresAtUtc) <= Date.now() + 30_000) await refreshSession()
+  if (version !== sessionVersion || state.status !== 'authenticated') throw new Error('Сессия завершена.')
+  return state.session.accessToken
+}
+
+export async function deleteAccount() {
+  if (deletingAccount || state.status !== 'authenticated') throw new Error('Удаление аккаунта недоступно.')
+  const version = sessionVersion
+  deletingAccount = true
+  try {
+    await api<void>('/api/users/me', { method: 'DELETE' })
+    if (version === sessionVersion) clearSession({ status: 'anonymous' })
+  } finally {
+    deletingAccount = false
   }
 }

@@ -56,6 +56,7 @@ export function SocialActions({ userId, canSkip, onlyUnblock }: {
         const conversationId = isMatch ? match?.conversationId : null
         if (isMatch) {
           toast.success(kind === 'like' ? 'У вас взаимный мэтч!' : 'Лайк убран. Мэтч сохранён.', {
+            id: kind === 'like' && match ? `match-${match.matchId}` : undefined,
             action: conversationId && conversationId !== '00000000-0000-0000-0000-000000000000' ? {
               label: 'К переписке',
               onClick: () => navigate(generatePath('/messages/:conversationId', { conversationId })),
@@ -77,6 +78,10 @@ export function SocialActions({ userId, canSkip, onlyUnblock }: {
       if (kind !== 'skip') {
         refresh.push(client.invalidateQueries({ queryKey: searchKey }))
         refresh.push(client.invalidateQueries({ queryKey: publicProfile(userId).queryKey, exact: true }))
+      }
+      if (kind === 'block' || kind === 'unblock') {
+        refresh.push(client.invalidateQueries({ queryKey: ['conversations'] }))
+        refresh.push(client.invalidateQueries({ queryKey: ['messages', 'history'] }))
       }
       await Promise.all(refresh)
     },

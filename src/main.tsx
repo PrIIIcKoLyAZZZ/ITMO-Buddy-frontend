@@ -8,6 +8,10 @@ import { queryClient } from '@/lib/query'
 import { router } from './routes'
 import './index.css'
 
+const realtime = import('@/realtime/service')
+  .then(({ startRealtime }) => startRealtime(path => { void router.navigate(path) }))
+  .catch(() => undefined)
+if (import.meta.hot) import.meta.hot.dispose(() => { void realtime.then(stop => stop?.()) })
 void restoreSession()
 
 createRoot(document.getElementById('root')!).render(
