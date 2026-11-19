@@ -65,3 +65,22 @@ export interface RecommendationResponse {
   score: number
   reasons: { code: string; description: string }[]
 }
+
+export type GoalCategory = 'Studies' | 'Projects' | 'Events' | 'Interests'
+
+export interface UpdateProfileRequest {
+  firstName: string | null
+  lastName: string | null
+  facultyId: string | null
+  course: number | null
+  aboutMe: string | null
+  contact: string | null
+  goals: string[]
+  interestIds: string[]
+  skillIds: string[]
+  isVisible: boolean
+}
+
+export interface UploadPhotoResponse {
+  photoUrl: string
+}

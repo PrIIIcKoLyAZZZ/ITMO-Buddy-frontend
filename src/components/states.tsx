@@ -44,13 +44,13 @@ export function LoadingSkeleton({ label = 'Загрузка' }: { label?: string
   )
 }
 
-export function ConfirmDialog({ trigger, title, description, confirmLabel, onConfirm, destructive }: {
-  trigger: ReactNode; title: string; description: string; confirmLabel: string;
-  onConfirm: () => void; destructive?: boolean
+export function ConfirmDialog({ trigger, title, description, confirmLabel, onConfirm, destructive, open, onOpenChange }: {
+  trigger?: ReactNode; title: string; description: string; confirmLabel: string;
+  onConfirm: () => void; destructive?: boolean; open?: boolean; onOpenChange?: (open: boolean) => void
 }) {
   return (
-    <Dialog.Root>
-      <Dialog.Trigger asChild>{trigger}</Dialog.Trigger>
+    <Dialog.Root open={open} onOpenChange={onOpenChange}>
+      {trigger && <Dialog.Trigger asChild>{trigger}</Dialog.Trigger>}
       <Dialog.Portal>
         <Dialog.Overlay className="fixed inset-0 z-40 bg-[#111b42]/45" />
         <Dialog.Content className="fixed top-1/2 left-1/2 z-50 w-[calc(100%-2rem)] max-w-md -translate-1/2 space-y-4 rounded-2xl bg-white p-6 shadow-xl">
@@ -58,7 +58,9 @@ export function ConfirmDialog({ trigger, title, description, confirmLabel, onCon
           <Dialog.Description className="text-secondary-ink">{description}</Dialog.Description>
           <div className="flex flex-wrap justify-end gap-2">
             <Dialog.Cancel asChild><Button variant="outline">Отмена</Button></Dialog.Cancel>
-            <Dialog.Action asChild><Button variant={destructive ? 'destructive' : 'default'} onClick={onConfirm}>{confirmLabel}</Button></Dialog.Action>
+            {open === undefined
+              ? <Dialog.Action asChild><Button variant={destructive ? 'destructive' : 'default'} onClick={onConfirm}>{confirmLabel}</Button></Dialog.Action>
+              : <Button variant={destructive ? 'destructive' : 'default'} onClick={onConfirm}>{confirmLabel}</Button>}
           </div>
         </Dialog.Content>
       </Dialog.Portal>

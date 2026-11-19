@@ -69,3 +69,10 @@
   .state-card p { @apply max-w-md text-secondary-ink; }
   .state-icon { @apply grid size-12 place-items-center rounded-2xl bg-[#e7edff] text-primary; }
 }
+
+@layer components {
+  .social-grid { @apply grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3; }
+  .social-card { @apply min-w-0 rounded-2xl border border-border bg-white p-4 sm:p-6; }
+  .social-chip { @apply inline-flex max-w-full items-center gap-1.5 rounded-full bg-muted px-3 py-1 text-sm font-medium text-foreground wrap-anywhere; }
+  .social-field { @apply w-full rounded-xl border border-border bg-white text-base text-foreground focus-visible:border-primary focus-visible:outline-2 focus-visible:outline-primary/25 disabled:bg-muted; }
+}

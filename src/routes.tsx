@@ -1,12 +1,15 @@
 import { ArrowLeft, Construction } from 'lucide-react'
 import { lazy, Suspense } from 'react'
-import { Link, Navigate, Outlet, Route, Routes, useLocation } from 'react-router-dom'
+import { Link, Navigate, Outlet, Route, createBrowserRouter, createRoutesFromElements, useLocation } from 'react-router-dom'
 import { AppShell } from '@/components/app-shell'
 import { EmptyState, ErrorState, LoadingSkeleton } from '@/components/states'
 import { Button } from '@/components/ui/button'
 import { logout, restoreSession, useSession } from '@/auth/session'
 
 const AuthPage = lazy(() => import('@/auth/auth-page'))
+const MyProfilePage = lazy(() => import('@/profile/profile-page').then(module => ({ default: module.MyProfilePage })))
+const PublicProfilePage = lazy(() => import('@/profile/profile-page').then(module => ({ default: module.PublicProfilePage })))
+const ProfileEditPage = lazy(() => import('@/profile/profile-edit').then(module => ({ default: module.ProfileEditPage })))
 
 function SessionGate() {
   const session = useSession()
@@ -37,9 +40,7 @@ function GuestRoutes() {
 }
 
 const futureRoutes = [
-  ['dashboard', 'Главная'], ['profile', 'Мой профиль'], ['profile/edit', 'Редактирование профиля'],
-  ['users/:userId', 'Профиль студента'], ['search', 'Поиск студентов'],
-  ['recommendations', 'Рекомендации'], ['listings', 'Объявления'], ['listings/new', 'Новое объявление'],
+  ['dashboard', 'Главная'], ['search', 'Поиск студентов'], ['recommendations', 'Рекомендации'], ['listings', 'Объявления'], ['listings/new', 'Новое объявление'],
   ['listings/my', 'Мои объявления'], ['listings/:id', 'Объявление'], ['listings/:id/edit', 'Редактирование объявления'],
   ['responses/my', 'Мои отклики'], ['messages', 'Сообщения'], ['messages/:conversationId', 'Переписка'],
   ['notifications', 'Уведомления'], ['settings', 'Настройки'],
@@ -52,22 +53,21 @@ function FuturePage({ title }: { title: string }) {
   </>
 }
 
-export function AppRoutes() {
-  return (
-    <Routes>
-      <Route element={<SessionGate />}>
-        <Route element={<GuestRoutes />}>
-          <Route path="login" element={<AuthPage key="login" mode="login" />} />
-          <Route path="register" element={<AuthPage key="register" mode="register" />} />
-        </Route>
-        <Route element={<ProtectedRoutes />}>
-          <Route index element={<Navigate to="/dashboard" replace />} />
-          {futureRoutes.map(([path, title]) =>
-            <Route key={path} path={path} element={<FuturePage title={title} />} />)}
-          <Route path="*" element={<EmptyState title="Страница не найдена" description="Проверь адрес или вернись на главную."
-            icon={<ArrowLeft />} action={<Button asChild><Link to="/dashboard">На главную</Link></Button>} />} />
-        </Route>
-      </Route>
-    </Routes>
-  )
-}
+export const router = createBrowserRouter(createRoutesFromElements(
+  <Route element={<SessionGate />}>
+    <Route element={<GuestRoutes />}>
+      <Route path="login" element={<AuthPage key="login" mode="login" />} />
+      <Route path="register" element={<AuthPage key="register" mode="register" />} />
+    </Route>
+    <Route element={<ProtectedRoutes />}>
+      <Route index element={<Navigate to="/dashboard" replace />} />
+      <Route path="profile" element={<MyProfilePage />} />
+      <Route path="profile/edit" element={<ProfileEditPage />} />
+      <Route path="users/:userId" element={<PublicProfilePage />} />
+      {futureRoutes.map(([path, title]) =>
+        <Route key={path} path={path} element={<FuturePage title={title} />} />)}
+      <Route path="*" element={<EmptyState title="Страница не найдена" description="Проверь адрес или вернись на главную."
+        icon={<ArrowLeft />} action={<Button asChild><Link to="/dashboard">На главную</Link></Button>} />} />
+    </Route>
+  </Route>
+))
