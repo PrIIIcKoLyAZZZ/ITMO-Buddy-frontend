@@ -11,6 +11,9 @@ const MyProfilePage = lazy(() => import('@/profile/profile-page').then(module =>
 const PublicProfilePage = lazy(() => import('@/profile/profile-page').then(module => ({ default: module.PublicProfilePage })))
 const ProfileEditPage = lazy(() => import('@/profile/profile-edit').then(module => ({ default: module.ProfileEditPage })))
 
+const SearchPage = lazy(() => import('@/discovery/search-page'))
+const RecommendationsPage = lazy(() => import('@/discovery/recommendations-page'))
+
 function SessionGate() {
   const session = useSession()
   if (session.status === 'loading') return <div className="session-screen"><LoadingSkeleton label="Проверяем сессию" /></div>
@@ -40,7 +43,7 @@ function GuestRoutes() {
 }
 
 const futureRoutes = [
-  ['dashboard', 'Главная'], ['search', 'Поиск студентов'], ['recommendations', 'Рекомендации'], ['listings', 'Объявления'], ['listings/new', 'Новое объявление'],
+  ['dashboard', 'Главная'], ['listings', 'Объявления'], ['listings/new', 'Новое объявление'],
   ['listings/my', 'Мои объявления'], ['listings/:id', 'Объявление'], ['listings/:id/edit', 'Редактирование объявления'],
   ['responses/my', 'Мои отклики'], ['messages', 'Сообщения'], ['messages/:conversationId', 'Переписка'],
   ['notifications', 'Уведомления'], ['settings', 'Настройки'],
@@ -64,6 +67,8 @@ export const router = createBrowserRouter(createRoutesFromElements(
       <Route path="profile" element={<MyProfilePage />} />
       <Route path="profile/edit" element={<ProfileEditPage />} />
       <Route path="users/:userId" element={<PublicProfilePage />} />
+      <Route path="search" element={<SearchPage />} />
+      <Route path="recommendations" element={<RecommendationsPage />} />
       {futureRoutes.map(([path, title]) =>
         <Route key={path} path={path} element={<FuturePage title={title} />} />)}
       <Route path="*" element={<EmptyState title="Страница не найдена" description="Проверь адрес или вернись на главную."

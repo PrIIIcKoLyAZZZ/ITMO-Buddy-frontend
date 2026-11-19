@@ -35,17 +35,17 @@ function canonicalName(name: string) {
   return name.normalize('NFKC').trim().replace(/\s+/g, ' ').toUpperCase()
 }
 
-export function DictionaryPicker({ type, label, selected, onChange, limit, error }: {
+export function DictionaryPicker({ type, label, selected, onChange, limit, error, allowCreate = true }: {
   type: Dictionary; label: string; selected: DictionaryItemResponse[]
-  onChange: (items: DictionaryItemResponse[]) => void; limit: number; error?: string
+  onChange: (items: DictionaryItemResponse[]) => void; limit: number; error?: string; allowCreate?: boolean
 }) {
   const [text, setText] = useState('')
   const [open, setOpen] = useState(false)
   const [createError, setCreateError] = useState('')
   const client = useQueryClient()
-  const trimmed = text.trim()
+  const trimmed = text.trim().replaceAll('\0', '')
   const term = useDebounced(trimmed)
-  const results = useQuery(dictionary(type, type === 'faculties' ? '' : term, open))
+  const results = useQuery(dictionary(type, type === 'faculties' || (!allowCreate && term.length < 2) ? '' : term, open))
   const create = useMutation({
     mutationKey: dictionaryWriteKey,
     mutationFn: async (name: string) => {
@@ -63,12 +63,12 @@ export function DictionaryPicker({ type, label, selected, onChange, limit, error
     },
   })
   const choices = (results.data ?? []).filter(item =>
-    !selected.some(value => value.id === item.id) &&
+    item.id !== '00000000-0000-0000-0000-000000000000' && !selected.some(value => value.id === item.id) &&
     (type !== 'faculties' || item.name.toLocaleLowerCase('ru').includes(trimmed.toLocaleLowerCase('ru'))),
   )
   const ready = type === 'faculties' || term === trimmed
   const hasExactMatch = [...(results.data ?? []), ...selected].some(item => canonicalName(item.name) === canonicalName(trimmed))
-  const showCreate = type !== 'faculties' && ready && results.isSuccess && !!trimmed && !hasExactMatch
+  const showCreate = allowCreate && type !== 'faculties' && ready && results.isSuccess && !!trimmed && !hasExactMatch
   const id = `picker-${type}`
 
   function select(item: DictionaryItemResponse) {

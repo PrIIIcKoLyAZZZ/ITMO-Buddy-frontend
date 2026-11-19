@@ -84,3 +84,15 @@ export interface UpdateProfileRequest {
 export interface UploadPhotoResponse {
   photoUrl: string
 }
+
+export interface LikeResponse {
+  targetUserId: string
+  isLiked: boolean
+  isMatch: boolean
+  match?: {
+    matchId: string
+    otherUser: Pick<ProfileCardResponse, 'userId' | 'firstName' | 'lastName' | 'photoUrl'>
+    createdAtUtc: string
+    conversationId: string | null
+  } | null
+}

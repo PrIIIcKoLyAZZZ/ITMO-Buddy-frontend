@@ -11,7 +11,7 @@ import { api } from '@/auth/session'
 import { ConfirmDialog, ErrorState, LoadingSkeleton, UserAvatar } from '@/components/states'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { myProfile } from './queries'
+import { myProfile, useProfilePhotoRefresh } from './queries'
 import { DictionaryPicker, dictionaryWriteKey, goals, profileName } from './ui'
 
 const item = z.object({ id: z.string().uuid(), name: z.string() })
@@ -61,6 +61,7 @@ function Field({ name, label, error, children }: {
 }
 
 function ProfileForm({ profile }: { profile: ProfileResponse }) {
+  const refreshPhoto = useProfilePhotoRefresh()
   const [selectedPhoto, setSelectedPhoto] = useState<{ file: File; preview: string }>()
   const [photoError, setPhotoError] = useState('')
   const fileInput = useRef<HTMLInputElement>(null)
@@ -161,7 +162,8 @@ function ProfileForm({ profile }: { profile: ProfileResponse }) {
       <legend className="sr-only">Фото профиля</legend>
       <h2 className="text-lg font-bold">Фото профиля</h2>
       <div className="flex flex-wrap items-center gap-4">
-        <UserAvatar name={profileName(profile)} photoUrl={selectedPhoto?.preview ?? profile.photoUrl} />
+        <UserAvatar name={profileName(profile)} photoUrl={selectedPhoto?.preview ?? profile.photoUrl}
+          onPhotoError={selectedPhoto ? undefined : refreshPhoto} />
         <Input ref={fileInput} className="h-auto min-w-0 w-full py-2 sm:w-auto" id="photo" type="file"
           accept="image/png,image/jpeg,.png,.jpg,.jpeg" aria-label="Выбрать фото профиля" aria-describedby="photo-help"
           onChange={event => {

@@ -2,12 +2,17 @@ import * as Dialog from '@radix-ui/react-alert-dialog'
 import * as Avatar from '@radix-ui/react-avatar'
 import { CircleAlert, UserRound } from 'lucide-react'
 import type { ReactNode } from 'react'
+import { cn } from '@/lib/utils'
 import { Button } from './ui/button'
 
-export function UserAvatar({ name, photoUrl }: { name?: string; photoUrl?: string | null }) {
+export function UserAvatar({ name, photoUrl, className, onPhotoError }: {
+  name?: string; photoUrl?: string | null; className?: string; onPhotoError?: (url: string) => void
+}) {
   return (
-    <Avatar.Root className="inline-flex size-10 shrink-0 items-center justify-center overflow-hidden rounded-full bg-[#e7edff] text-primary">
-      <Avatar.Image src={photoUrl ?? undefined} alt={name ?? 'Аватар'} className="size-full object-cover" />
+    <Avatar.Root className={cn("inline-flex size-10 shrink-0 items-center justify-center overflow-hidden rounded-full bg-[#e7edff] text-primary", className)}>
+      <Avatar.Image key={photoUrl} onLoadingStatusChange={status => {
+        if (status === 'error' && photoUrl) onPhotoError?.(photoUrl)
+      }} src={photoUrl ?? undefined} alt={name ?? 'Аватар'} className="size-full object-cover" />
       <Avatar.Fallback aria-hidden="true">{name ? name.trim().slice(0, 1).toUpperCase() : <UserRound size={19} />}</Avatar.Fallback>
     </Avatar.Root>
   )

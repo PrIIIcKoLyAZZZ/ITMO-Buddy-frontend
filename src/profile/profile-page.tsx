@@ -6,13 +6,15 @@ import type { ProfileResponse } from '@/api/contracts'
 import { useSession } from '@/auth/session'
 import { EmptyState, ErrorState, LoadingSkeleton, UserAvatar } from '@/components/states'
 import { Button } from '@/components/ui/button'
-import { myProfile, publicProfile } from './queries'
+import { myProfile, publicProfile, useProfilePhotoRefresh } from './queries'
+import { SocialActions, useSocialStatus } from '@/social/actions'
 import { Chips, goalLabel, profileName } from './ui'
 
 const userIdPattern = /^[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i
 
 function ProfileDetails({ profile, own }: { profile: ProfileResponse; own?: boolean }) {
   const name = profileName(profile)
+  const refreshPhoto = useProfilePhotoRefresh(own ? undefined : profile.userId)
   const groups = [
     { title: 'Цели', values: profile.goals.map(goalLabel) },
     { title: 'Интересы', values: profile.interests.map(item => item.name) },
@@ -23,7 +25,7 @@ function ProfileDetails({ profile, own }: { profile: ProfileResponse; own?: bool
     <section className="social-card space-y-5">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div className="flex min-w-0 items-center gap-3">
-          <UserAvatar name={name} photoUrl={profile.photoUrl} />
+          <UserAvatar name={name} photoUrl={profile.photoUrl} onPhotoError={refreshPhoto} />
           <div className="min-w-0">
             {own && <h2 className="text-xl font-bold wrap-anywhere">{name}</h2>}
             <p className="text-sm text-secondary-ink wrap-anywhere">
@@ -33,6 +35,7 @@ function ProfileDetails({ profile, own }: { profile: ProfileResponse; own?: bool
         </div>
         {own && <Button asChild><Link to="/profile/edit"><Pencil size={16} /> Редактировать</Link></Button>}
       </div>
+      {!own && <SocialActions userId={profile.userId} />}
       {own && <div className="flex flex-wrap gap-2">
         <span className="social-chip">{profile.isVisible ? 'Виден другим студентам' : 'Профиль скрыт'}</span>
         {!profile.isComplete && <span className="social-chip">Анкета пока заполнена не полностью</span>}
@@ -74,6 +77,12 @@ export function MyProfilePage() {
 
 function PublicProfile({ userId }: { userId: string }) {
   const profile = useQuery(publicProfile(userId))
+  const { data: social } = useSocialStatus(userId)
+  if (social?.blocked) {
+    return <EmptyState icon={<EyeOff />} title="Пользователь заблокирован"
+      description="Разблокируй пользователя, чтобы снова открыть его профиль, если анкета доступна."
+      action={<SocialActions userId={userId} onlyUnblock />} />
+  }
   if (profile.error instanceof ApiError && profile.error.status === 404) {
     return <EmptyState icon={<EyeOff />} title="Профиль недоступен"
       description="Студент мог скрыть анкету или ссылка устарела." />
