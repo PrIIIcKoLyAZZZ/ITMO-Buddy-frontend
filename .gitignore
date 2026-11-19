@@ -1,4 +1,4 @@
-# Наборы файлов IDE и локальная конфигурация
+# IDE и локальная конфигурация
 .idea/
 .DS_Store
 node_modules/
@@ -11,3 +11,5 @@ dist/
 *.pfx
 *.crt
 *.tsbuildinfo
+
+.cert/
